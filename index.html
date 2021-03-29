@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      body {
+        margin: 0;
+        padding-bottom: 3rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        height: 100vh;
+      }
+
+      #form {
+        background: rgba(0, 0, 0, 0.15);
+        padding: 0.25rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        height: 3rem;
+        box-sizing: border-box;
+        backdrop-filter: blur(10px);
+      }
+      #input {
+        border: none;
+        padding: 0 1rem;
+        flex-grow: 1;
+        border-radius: 2rem;
+        margin: 0.25rem;
+      }
+      #input:focus {
+        outline: none;
+      }
+      #form > button {
+        background: #333;
+        border: none;
+        padding: 0 1rem;
+        margin: 0.25rem;
+        border-radius: 3px;
+        outline: none;
+        color: #fff;
+      }
+
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        max-height: calc(100vh - 3em);
+        top: 0;
+        left: 0;
+        right: 0;
+        overflow: scroll;
+      }
+      #messages > li {
+        display: flex;
+        justify-content: flex-start;
+      }
+      #messages > li:nth-child(odd) {
+        background: #f4f9f9;
+      }
+
+      li > .bubble {
+        padding: 0.5rem 1rem;
+        margin: 4px 16px;
+      }
+
+      .user-connection {
+        text-align: center;
+        font-size: 0.8rem;
+        height: 10px;
+        padding: 0.1rem;
+        color: #0e7a0059;
+      }
+
+      #messages > .mymsg {
+        text-align: end;
+        justify-content: flex-end;
+      }
+
+      .chat-app {
+        max-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #username-form {
+        background: rgba(0, 0, 0, 0.15);
+        padding: 0.25rem;
+        margin: auto;
+        display: flex;
+        height: 3rem;
+        width: 24em;
+        box-sizing: border-box;
+        backdrop-filter: blur(10px);
+      }
+      #username-input {
+        border: none;
+        padding: 0 1rem;
+        flex-grow: 1;
+        border-radius: 2rem;
+        margin: 0.25rem;
+      }
+
+      .user-istyping {
+        background-color: #fff;
+        padding: 0.25rem;
+        margin: 0.25rem;
+        position: fixed;
+        bottom: 3em;
+        left: 0;
+        right: 0;
+        display: flex;
+        height: 2rem;
+        box-sizing: border-box;
+        backdrop-filter: blur(10px);
+      }
+
+      .bubble {
+        border: 1px solid white;
+        background-color: lightseagreen;
+        border-radius: 5px;
+      }
+      .mymsg > .bubble {
+        background-color: cornflowerblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat-app"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var chatApp = document.getElementById("chat-app");
+      //   launch chat
+      function launchApp() {
+        //   chat HTML
+        chatApp.innerHTML =
+          "<ul id='messages'></ul>" +
+          "<form id='form' action=''>" +
+          "<input id='input' autocomplete='off' />" +
+          "<button>Send</button></form>";
+
+        var socket = io();
+
+        socket.emit("user connection", username);
+
+        var form = document.getElementById("form");
+        var messages = document.getElementById("messages");
+        var input = document.getElementById("input");
+
+        // POST message
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (input.value) {
+            console.log(input.value);
+            socket.emit("chat message", {
+              type: "message",
+              name: username,
+              message: input.value,
+            });
+            // socket.emit("connectMsg", "new user connected");
+            input.value = "";
+          }
+        });
+
+        // Emit User is typing
+        input.addEventListener("input", function () {
+          socket.emit("isTyping", username);
+        });
+
+        // render incoming message
+        socket.on("chat message", ({ name, message }) => {
+          var item = document.createElement("li");
+          console.log(name + ": " + toString(message));
+          var bubble = document.createElement("div");
+          bubble.className = "bubble";
+
+          bubble.textContent = name + ": " + message;
+          if (name === username) {
+            bubble.textContent = message;
+            item.className = "mymsg";
+          }
+          item.appendChild(bubble);
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // new user connected to chat
+        socket.on("user conection", function (name) {
+          var item = document.createElement("li");
+          item.textContent = name + "is connected";
+          item.className = "user-connection";
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // visualize when user is typing
+        socket.on("user isTyping", function (username) {
+          var item = document.createElement("li");
+          item.textContent = username + " is typing message";
+          item.className = "user-istyping";
+          chatApp.appendChild(item);
+          window.setTimeout(() => {
+            chatApp.removeChild(item);
+          }, 1500);
+        });
+      }
+
+      var username = "";
+
+      //   if no username run username input form
+      if (username === "") {
+        window.scrollTo(0, 0);
+        chatApp.innerHTML =
+          "<form id='username-form'>" +
+          "<input id='username-input' type'text' placeholder='Enter username' />" +
+          "<button type='submit'>Acces chatroom</button>" +
+          "</form>";
+
+        var usernameForm = document.getElementById("username-form");
+        var usernameInput = document.getElementById("username-input");
+
+        usernameForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (usernameInput.value) {
+            username = usernameInput.value;
+            console.log(username);
+            launchApp();
+          }
+        });
+      } else if (username !== "") {
+        launchApp();
+      }
+    </script>
+  </body>
+</html>

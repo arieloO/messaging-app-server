@@ -63,6 +63,6 @@ io.on("connection", (socket) => {
   });
 });
 
-http.listen(4040, () => {
-  console.log("The application is running on localhost:4040!");
+http.listen(process.env.PORT || 3000, () => {
+  console.log("Server is running...");
 });
