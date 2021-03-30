@@ -8,8 +8,6 @@ const io = require("socket.io")(http, {
   },
 });
 
-console.log(process.env.TOTO);
-
 // get
 app.get("/", (req, res) => {
   // sends html file as response
