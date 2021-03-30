@@ -3,10 +3,12 @@ const app = require("express")();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://messaging-app-client-kgvp0buv6-arieloo.vercel.app"],
     method: ["GET", "POST"],
   },
 });
+
+console.log(process.env.TOTO);
 
 // get
 app.get("/", (req, res) => {
