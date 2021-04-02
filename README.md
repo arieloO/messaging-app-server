@@ -11,17 +11,17 @@ Check the repo here : [messaging-app-server](https://github.com/arieloO/messagin
 
 
 
-#Instructions :
+## Instructions :
 
-To run locally : 
-
+### To run on your local machine : 
 
 ### `npm install`
 
-install packages 
+install packages with npm
 
+THEN
 
-### `nodemon`
+### `nodemon app.js`
 OR
 ### `node app.js`
 
